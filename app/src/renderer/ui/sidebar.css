@@ -1,0 +1,49 @@
+.sidebar {
+  width: 280px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  overflow: hidden; /* nothing may spill under the reading pane */
+}
+
+.sidebar-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+/* Four tabs share the sidebar width, each as wide as its label needs. */
+.sidebar-tabs button {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  padding: 6px 3px;
+}
+.sidebar-tabs button[aria-selected='true'] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.sidebar-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 4px 16px;
+}
+
+.sidebar-empty {
+  color: var(--muted);
+  padding: 8px 12px;
+  margin: 0;
+}

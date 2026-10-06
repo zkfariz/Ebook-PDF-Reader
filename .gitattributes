@@ -1,0 +1,3 @@
+# Books and test fixtures are binary: never convert line endings (would break PDF offsets).
+*.pdf binary
+*.epub binary

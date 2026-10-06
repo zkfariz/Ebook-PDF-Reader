@@ -1,0 +1,25 @@
+/* One "page" card centred in the reading pane; the book text flows inside it (F07.1). */
+.epub-pane {
+  padding: 16px;
+  justify-content: center;
+}
+
+.epub-view {
+  display: block;
+  width: 100%;
+  max-width: 780px;
+  height: 100%;
+  background: var(--page);
+  box-shadow: var(--page-shadow);
+}
+
+/* foliate draws highlights in an SVG over the text; these variables reach it through its shadow DOM.
+   Full colour + blend: by day the light marker colours darken the paper (text stays dark);
+   by night the dark marker colours lighten it (text stays light). */
+.epub-view {
+  --overlayer-highlight-opacity: 1;
+  --overlayer-highlight-blend-mode: multiply;
+}
+:root[data-theme='night'] .epub-view {
+  --overlayer-highlight-blend-mode: screen;
+}

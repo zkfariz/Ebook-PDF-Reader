@@ -1,0 +1,113 @@
+.reader {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.reader-pane {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  background: var(--bg);
+  outline: none;
+}
+
+/* Covers the pane while the book is being prepared, so no half-ready page is shown. */
+.reader-status {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+}
+.tool-group button {
+  min-width: 30px;
+  padding: 4px 8px;
+}
+.tool-group button[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.page-box {
+  width: 52px;
+  text-align: center;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px;
+}
+.page-total,
+.zoom-label {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.zoom-label {
+  min-width: 44px;
+  text-align: center;
+}
+
+.status-bar {
+  padding: 4px 12px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+/* Full screen (F13): only the book. The toolbar floats over the page when the mouse touches the
+   top edge, so the page never changes size (and EPUB text never re-flows) when it appears. */
+.reader.fullscreen .toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  visibility: hidden;
+}
+.reader.fullscreen.show-toolbar .toolbar {
+  visibility: visible;
+  box-shadow: var(--page-shadow);
+}
+.reader.fullscreen .status-bar {
+  display: none;
+}
+.reader {
+  position: relative;
+}
+
+/* Sidebar + reading pane side by side. */
+.reader-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.reader-body .reader-pane {
+  min-width: 0;
+}
+.reader.fullscreen .sidebar {
+  display: none; /* F13.1: only the book in full screen */
+}
+
+.bookmark-toggle.on {
+  color: var(--accent);
+  border-color: var(--accent);
+}

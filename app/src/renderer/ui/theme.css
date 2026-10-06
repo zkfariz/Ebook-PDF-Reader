@@ -1,0 +1,109 @@
+/* Design tokens: _config/design-system.md. Never hard-code colours in components. */
+:root {
+  --bg: #f4f1ea;
+  --surface: #ffffff;
+  --page: #ffffff;
+  --ink: #1e1e1e;
+  --muted: #6b6b6b;
+  --line: #ddd8cc;
+  --accent: #2f6fdb;
+  --hl-yellow: #ffe58a;
+  --hl-green: #b9ebb0;
+  --hl-blue: #b5d8ff;
+  --hl-pink: #f9c2d6;
+
+  --danger: #b3261e;
+  --backdrop: rgba(0, 0, 0, 0.25);
+  --page-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+
+  --font-ui: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --toolbar-h: 44px;
+  color-scheme: light;
+}
+
+:root[data-theme='night'] {
+  --bg: #16171a;
+  --surface: #1f2125;
+  --page: #1b1c1f;
+  --ink: #dadada;
+  --muted: #8e9196;
+  --line: #2e3035;
+  --accent: #6ea2ff;
+  --hl-yellow: #7a6420;
+  --hl-green: #2f5a2a;
+  --hl-blue: #23466e;
+  --hl-pink: #6a2e44;
+  --danger: #f2b8b5;
+  --backdrop: rgba(0, 0, 0, 0.5);
+  --page-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.4 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* No animations anywhere (design system rule); hover colour changes only. */
+*,
+*::before,
+*::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface); /* white on blue by day, dark on light blue by night: readable in both */
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.toolbar {
+  height: var(--toolbar-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.toolbar .title {
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

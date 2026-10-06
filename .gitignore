@@ -1,0 +1,10 @@
+node_modules/
+app/out/
+app/release/
+app/test-results/
+app/playwright-report/
+stages/05_package-release/output/installers/*.exe
+shared/test-books/*
+!shared/test-books/.gitkeep
+*.log
+app/src/renderer/public/pdfjs/

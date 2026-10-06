@@ -1,0 +1,106 @@
+/* The reading pane scrolls when a zoomed page is bigger than the window.
+   margin:auto centres the page without clipping its top/left edge when it overflows (F07.3). */
+.pdf-pane {
+  overflow: auto;
+  scrollbar-gutter: stable both-edges;
+}
+
+.pdf-page {
+  margin: auto;
+  padding: 16px;
+}
+
+.pdf-page canvas {
+  display: block;
+  box-shadow: var(--page-shadow);
+}
+
+/* Night mode (F08.2): dark page, light text; hue-rotate keeps colours in pictures recognisable. */
+.pdf-page.night canvas {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Page = canvas + marks + pdf.js text layer stacked on top of each other. */
+.pdf-sheet {
+  position: relative;
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+}
+.pdf-marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.search-mark {
+  position: absolute;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+/* pdf.js text layer: invisible text over the canvas, used for positions and selection
+   (rules from pdfjs-dist/web/pdf_viewer.css, trimmed to what this app uses). */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  text-align: initial;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  z-index: 0;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.textLayer .markedContent {
+  display: contents;
+}
+.textLayer ::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Highlights (F11): marker colours from the design tokens, blended so the text stays readable
+   (multiply by day on the white page, screen by night on the inverted page). */
+.hl-mark {
+  position: absolute;
+  mix-blend-mode: multiply;
+}
+:root[data-theme='night'] .hl-mark {
+  mix-blend-mode: screen;
+}
+.hl-yellow { background: var(--hl-yellow); }
+.hl-green { background: var(--hl-green); }
+.hl-blue { background: var(--hl-blue); }
+.hl-pink { background: var(--hl-pink); }
+
+/* F12: ✎ right after the last line of a highlight that has a note. */
+.note-marker {
+  position: absolute;
+  line-height: 1;
+  padding-left: 2px;
+  color: var(--accent);
+  font-weight: 700;
+}

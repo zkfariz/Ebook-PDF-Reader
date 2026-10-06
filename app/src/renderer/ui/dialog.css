@@ -1,0 +1,50 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--backdrop);
+  z-index: 100;
+}
+
+.dialog {
+  width: min(420px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: var(--page-shadow);
+}
+.dialog h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+.dialog p {
+  margin: 0 0 8px;
+}
+.dialog .error {
+  color: var(--danger);
+}
+.dialog input {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin: 4px 0 8px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dialog button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--surface);
+}

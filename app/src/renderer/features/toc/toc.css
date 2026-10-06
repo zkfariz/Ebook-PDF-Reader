@@ -1,0 +1,43 @@
+.toc,
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.toc-twisty {
+  flex: none;
+  width: 22px;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+}
+
+.toc-link {
+  flex: 1;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  line-height: 1.35;
+}
+.toc-link:hover:not(:disabled) {
+  background: var(--bg);
+}
+.toc-link:disabled {
+  opacity: 1;
+  color: var(--muted);
+}
+.toc-link[aria-current='location'] {
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--bg);
+}
