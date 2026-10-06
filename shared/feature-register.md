@@ -35,3 +35,4 @@ Stages 03–05 update this file. Status: ⬜ not started · 🔨 in progress · 
 | L05 | Sepia theme | 💤 |
 | L06 | Bookmark labels also show the first words of the page (labels in long chapters look alike) | 💤 |
 | L07 | Right-to-left books: ← goes forward (mirror the arrow keys / ◀ ▶) | 💤 |
+| L08 | OCR: recognise text in scanned PDFs so they can be searched, highlighted and noted (Tesseract.js, offline, English first). **Spec drafted as F16** (`stages/01_spec/output/spec.md`), awaiting approval; moves to the v1 table when approved | 📝 |

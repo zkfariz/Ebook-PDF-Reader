@@ -1,6 +1,6 @@
 # Ebook Reader · v1 Spec
 
-Status: **approved 2026-10-04** (Q5, Q6 defaults accepted) · **F15 added and approved 2026-10-06** (Q7: offer only) · 2026-10-04 · Source: `shared/feature-register.md` (F01–F14)
+Status: **approved 2026-10-04** (Q5, Q6 defaults accepted) · **F15 added and approved 2026-10-06** (Q7: offer only) · **F16 (OCR) drafted 2026-10-06, awaiting approval (Q8–Q11)** · 2026-10-04 · Source: `shared/feature-register.md` (F01–F14)
 
 Conventions used below:
 - **Book** = an opened PDF or EPUB file. **Position** = where the reader is in a book (PDF: page number; EPUB: a CFI location).
@@ -207,6 +207,37 @@ Conventions used below:
 | F15.4 | Given a file that is missing, damaged or not a book reaches the app this way, then I see the usual plain-language message on the library screen; nothing crashes. | Both |
 | F15.5 | Given I uninstall the app, then *Open with* no longer lists it, and no book file was changed. | — |
 
+### F16 · Recognise text in scanned PDFs (OCR) · DRAFT 2026-10-06 for v1.2.0, awaiting approval
+**Why:** today a scanned PDF (pages that are only pictures) can't be searched, highlighted or given notes; the app just says so (F09.4, F11.5). OCR ("optical character recognition") reads the picture and produces the text, so those books work like any other.
+**User does:** opens a scanned PDF. A page without text shows a slim notice above the page: *"This page is a picture, so its text can't be selected or searched. **Recognise text**"*. Clicking it reads that page. A second choice in the same notice, *Recognise the whole book*, reads every page in the background.
+**User sees:** a progress note ("Reading page 12 of 240…", with *Cancel*) while the book stays readable. When a page is done, its text can be selected, highlighted, given notes, and found by search. A small, permanent note reminds: *"Recognised text may contain mistakes."*
+**Rules:**
+- **PDF only.** EPUBs already have text.
+- **Offline:** the recognition engine and its English language data ship inside the app. Nothing is downloaded or sent anywhere (Q9).
+- **The PDF is never changed.** Recognised text is stored in the app's own data folder, per book, and reused next time (a page is only read once).
+- Recognition runs only when asked, never automatically.
+- The window stays responsive while it runs; you can keep reading, turn pages or close the book.
+
+| # | Acceptance criterion | Scope |
+|---|---|---|
+| F16.1 | Given a PDF page with no text, then a notice offers **Recognise text** and **Recognise the whole book**. Pages that already have text show no notice. | PDF |
+| F16.2 | Given I click **Recognise text**, then a progress note shows, and when it finishes the page's words can be selected and highlighted, and the notice is gone. | PDF |
+| F16.3 | Given I click **Recognise the whole book**, then progress "Reading page N of M" updates, I can keep reading and turning pages meanwhile, and **Cancel** stops it. Pages already finished keep their text. | PDF |
+| F16.4 | Given recognised pages, when I search, then matches on those pages appear in the results, and clicking one jumps to the page and outlines the word (F09.1, F09.2). | PDF |
+| F16.5 | Given a PDF with no text and nothing recognised yet, when I search, then the message becomes "This book has no searchable text. Recognise it to search." with a **Recognise the whole book** button (changes F09.4). | PDF |
+| F16.6 | Given highlights and notes on recognised text, when I zoom, resize the window or restart the app, then they still cover exactly the same words (F11.2). Recognised text is reused, not re-read. | PDF |
+| F16.7 | Given I closed the app in the middle of "Recognise the whole book", when I open the book again, then the finished pages are still recognised and the rest can be continued. | PDF |
+| F16.8 | Given a blank page or one with no readable text, then I see "No text found on this page." and the app carries on. A failure shows a plain message and never crashes or freezes the app. | PDF |
+| F16.9 | Given a book is removed from the library, then its recognised text is removed with its bookmarks and notes (F04.2). The PDF file is byte-for-byte unchanged by recognising. | PDF |
+| F16.10 | Given the app is used with recognition, then no network request is made (checked in Stage 04). | PDF |
+| F16.11 | Given a normal clean scanned page on a typical laptop, then recognising one page takes no more than about 10 s. (**To be measured first in a test on a real scanned book; adjust before approving.**) | PDF |
+
+**Notes for Stage 02 (not part of the spec the user approves):**
+- Engine: Tesseract.js (Apache-2.0) in a web worker, with the WebAssembly core and `eng` language data bundled. The page CSP needs `worker-src` and `'wasm-unsafe-eval'`; the offline blocker must still allow only `app://` requests.
+- Data model change: per-book recognised text (page → words with positions), stored in `books/<id>.json` or a sibling file. Needs a decisions-log entry and a schema version bump.
+- Recognised words become an invisible text layer so the existing search, selection and highlight anchors (page + text offsets) work unchanged.
+- Before building: a small spike on 2–3 real scanned books to measure speed and accuracy and decide the language data size (`tessdata_fast` vs `tessdata`).
+
 ---
 
 ## Keyboard shortcuts
@@ -254,3 +285,7 @@ Shortcuts must also work when keyboard focus is inside the EPUB content (iframe)
 | Q5 | Notes only on highlights, or also free-standing notes on a page? | ✅ **Highlights only** (default accepted at approval) |
 | Q6 | Bookmarks: editable names, or the automatic label only? | ✅ **Automatic label only** (default accepted at approval) |
 | Q7 | F15: should the installer only **offer** Ebook Reader for .pdf/.epub (you choose it in Open with), or also try to become the **default**? | ✅ Offer only, for both; never take over the default (approved 2026-10-06) |
+| Q8 | F16: when should OCR run? | ⏳ Suggestion: **only when you click** (*Recognise text* for one page, or *the whole book*), never automatically, so the app never uses the CPU behind your back |
+| Q9 | F16: which languages? Each language adds its own data file to the installer. | ⏳ Suggestion: **English only** in the first version (about +15 MB installer). Others (e.g. Malay) can be added later |
+| Q10 | F16: is it OK that the installer grows by about 10–20 MB and the OCR engine is bundled? | ⏳ Suggestion: yes |
+| Q11 | F16: where is the recognised text kept? | ⏳ Suggestion: in the app's data folder only, per book, reused next time. The PDF is **never** modified (so no "save as searchable PDF" in this version) |
