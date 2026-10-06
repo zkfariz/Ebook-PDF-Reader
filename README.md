@@ -61,4 +61,4 @@ The project is organised in numbered stages (spec → architecture → build →
 
 Version 1.1.1 is released and tested (88 end-to-end and 53 unit tests, plus hand tests on a real Windows PC).
 
-This is a personal project. There is no licence file yet, so all rights are reserved by the author.
+This is a personal project, released under the [MIT License](LICENSE): you are free to use, copy and change it. The libraries it uses (pdf.js, foliate-js, Electron, React and others) keep their own open-source licences.
