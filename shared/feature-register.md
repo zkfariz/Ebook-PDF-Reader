@@ -2,7 +2,7 @@
 
 Stages 03–05 update this file. Status: ⬜ not started · 🔨 in progress · 🔍 built, needs testing · ✅ tested and signed off · 💤 later (not v1).
 
-**Current version:** 1.1.1 (1.2.0 built, not yet released) · **Last release:** v1.1.1 on 2026-10-06 (signed off in `stages/04_test-review/output/test-report-v1.1.1.md`; previous: v1.1.0, v1.0.2)
+**Current version:** 1.2.0 · **Last release:** v1.2.0 on 2026-10-06 (signed off in `stages/04_test-review/output/test-report-v1.2.0.md`; previous: v1.1.1, v1.1.0, v1.0.2)
 
 ## v1
 
@@ -23,7 +23,7 @@ Stages 03–05 update this file. Status: ⬜ not started · 🔨 in progress · 
 | F13 | Full screen (F11) | ✔ | ✔ | Done in S5 | ✅ |
 | F14 | Windows installer (.exe) with a Start-menu shortcut | — | — | Installer with the user's logo (S11); install, offline and reinstall hand-tested (H1–H3) | ✅ |
 | F15 | Open books from File Explorer ("Open with", double-click) | ✔ | ✔ | v1.1.0 (was later idea L03). Installer offers itself only and never takes over the default; signed off 2026-10-06 (`test-report-v1.1.0.md`, hand test H1–H6) | ✅ |
-| F16 | Recognise text in scanned PDFs (OCR): search, highlight and notes on scanned pages | ✔ | — | v1.2.0 (was later idea L08). Tesseract.js, offline, English only, only on request; text stored in app data, PDF never changed. Spec approved 2026-10-06. Built 2026-10-06 (S12–S14, installer 1.2.0); needs Stage 04 testing and the user's hand test | 🔍 |
+| F16 | Recognise text in scanned PDFs (OCR): search, highlight and notes on scanned pages | ✔ | — | v1.2.0 (was later idea L08). Tesseract.js, offline, English only, only on request; text stored in app data, PDF never changed. Spec approved 2026-10-06. Released in v1.2.0 on 2026-10-06 (S12–S14); signed off in `test-report-v1.2.0.md`, hand test H1–H7 | ✅ |
 
 ## Later (do not build in v1)
 

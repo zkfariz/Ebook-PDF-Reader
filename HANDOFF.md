@@ -1,8 +1,9 @@
-# Handoff · 2026-10-06 · v1.1.1 RELEASED (1.1.0 = F15; 1.1.1 = night-mode fix B004)
+# Handoff · 2026-10-06 · v1.2.0 RELEASED (F16: OCR for scanned PDFs)
 
 The project is complete for v1, plus F15 ("Open with" from File Explorer) in 1.1.0.
 
-- **Latest:** **1.1.1** (tag `v1.1.1`), installer `stages/05_package-release/output/installers/Ebook-Reader-Setup-1.1.1.exe`, SHA-256 in the release notes. Repo on GitHub: `zkfariz/Ebook-PDF-Reader` (private); README and screenshots in `docs/`.
+- **Latest:** **1.2.0** (tag `v1.2.0`, installer `stages/05_package-release/output/installers/Ebook-Reader-Setup-1.2.0.exe`): F16 text recognition for scanned PDFs (Tesseract.js 7, English, offline, only on request; recognised text in `books/<id>.ocr.json`; code in `src/renderer/reader/ocr/` and `features/ocr/`; plan S12–S14 in `stages/02_architecture/output/build-plan.md`). Fixtures `scanned.pdf` (generator `make-scanned.mjs`), test helper `tests/e2e/scanHelper.ts`. Open ideas: removing ruled lines or cleaning images before OCR, more languages, a 2-engine mode for low-memory PCs.
+- **Previous:** **1.1.1** (tag `v1.1.1`), installer `stages/05_package-release/output/installers/Ebook-Reader-Setup-1.1.1.exe`, SHA-256 in the release notes. Repo on GitHub: `zkfariz/Ebook-PDF-Reader` (private); README and screenshots in `docs/`.
 - **Released:** Ebook Reader **1.1.0** (git tag `v1.1.0`). Installer: `stages/05_package-release/output/installers/Ebook-Reader-Setup-1.1.0.exe`, SHA-256 in the release notes. The user hand-tested it (H1–H6) and then uninstalled it as step H6, so it may need reinstalling (their data was kept).
 - **F15 notes:** single-instance lock in `app/src/main/index.ts` + `openRequests.ts`; "Open with" registry entries in `app/build/installer.nsh` (not electron-builder's `fileAssociations`, see the decisions log). The e2e helper `hardKill` kills the real app process: `app.process()` is only Playwright's launcher.
 - **Last verification (1.1.0):** 87/87 e2e (×3), 53/53 unit, type-check.

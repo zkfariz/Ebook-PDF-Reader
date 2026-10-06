@@ -6,7 +6,7 @@ This workspace builds a **simple, offline ebook reader for Windows** that opens 
 
 The goal is a calm, distraction-free reader with the basics done well. It is not a full document editor.
 
-Status: **v1.1.1 released 2026-10-06** (v1 features F01–F14 + F15 "Open with"; 1.1.1 fixes B004). All stages done; latest test report `stages/04_test-review/output/test-report-v1.1.1.md`, release notes `stages/05_package-release/output/release-notes.md`. Future work: the "Later" ideas in `shared/feature-register.md`; new features go back through Stage 01. **New session? Read `HANDOFF.md` first.**
+Status: **v1.2.0 released 2026-10-06** (v1 features F01–F14, F15 "Open with", F16 OCR for scanned PDFs). All stages done; latest test report `stages/04_test-review/output/test-report-v1.2.0.md`, release notes `stages/05_package-release/output/release-notes.md`. Future work: the "Later" ideas in `shared/feature-register.md`; new features go back through Stage 01. **New session? Read `HANDOFF.md` first.**
 
 Commands (run in `app/`): `npm run dev` · `npm run typecheck` · `npm test` · `npm run test:e2e` · `npm run dist` (installer).
 

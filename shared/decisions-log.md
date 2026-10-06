@@ -2,6 +2,9 @@
 
 Newest first. Each entry gives the date, the decision, why, and the alternatives considered.
 
+## 2026-10-06 · Release v1.2.0 (Stage 05)
+- **Released 1.2.0 exactly as tested; no further bump.** SHA-256 `7a081aac…97353a9`. The version was set to 1.2.0 in S14, so the installer the user hand-tested is the release.
+
 ## 2026-10-06 · F16 OCR: engine pool and whole-book run (Stage 03, S14)
 - **Up to 3 engines (cores − 1), all stopped 20 s after the last job.** Measured on the user's 128-page scanned book: 5 min 29 s, peak about 1.05 GB, about 0.5 GB afterwards. One engine would be about 3 times slower; more than 3 would use more memory for little gain on typical PCs.
 - **Cancel lets pages already being read finish (and saves them)** instead of aborting an engine mid-page, which tesseract.js cannot do cleanly. **Continue** is just "read the pages that are still pictures", so it also resumes after quitting the app; no separate resume state is stored.

@@ -2,6 +2,35 @@
 
 Newest first.
 
+## Ebook Reader 1.2.0 · 2026-10-06
+
+**Installer:** `installers/Ebook-Reader-Setup-1.2.0.exe` (112.5 MB, Windows 10/11, 64-bit)
+**SHA-256:** `7a081aacffa701e71a98957b843d558c15201c409fa8f7234260b39b797353a9`
+**Tested:** `stages/04_test-review/output/test-report-v1.2.0.md` (100 automated end-to-end + 73 unit tests, 3 full runs; hand test by the user).
+
+### New: read scanned PDFs (text recognition, "OCR")
+Scanned PDFs, where every page is only a picture, can now be searched, highlighted and given notes.
+- On a page that is only a picture, a notice offers **Recognise text** (this page) and **Recognise the whole book**.
+- While a whole book is being read you can keep reading and turning pages. A progress count shows, with **Cancel**. After Cancel, or after quitting the app part-way, **Continue** reads only the pages that are still pictures.
+- Recognised pages can be selected, highlighted, given notes and found by search, exactly like pages of a normal PDF. Search also offers **Recognise the whole book** when a book has no text yet.
+- A blank page says "No text found on this page."
+- **Private and offline, as always:** the recognition runs on your computer, only when you ask. The engine and the English language data are inside the installer, and nothing is downloaded or sent anywhere.
+- **Your PDF is never changed.** Recognised text is saved separately in the app's data folder (one small file per book, removed when you remove the book from the library). Every page is saved as soon as it is read, so it is only ever read once.
+
+### Good to know
+- **English only** for now.
+- **Mistakes are normal.** Typeset, clean scans read very well in our tests (99–100 % of the words on test pages). Hand-lettered, faded, skewed or noisy pages read much worse: on a hand-lettered, diagram-heavy page of a real book about 7 of 10 words were found. The app says "Recognised text may contain mistakes."
+- **Speed and memory:** about 3–8 seconds per page. A 128-page scanned book took about 5½ minutes on an 8-core PC. While a whole book is being read the app can use about 1 GB of memory; it falls back to about half of that soon after it finishes.
+- The installer is about 4 MB larger than 1.1.1.
+
+### Install, update, uninstall
+- Same as 1.0.2 (below). Updating from 1.1.1 keeps your library, bookmarks, highlights and notes.
+
+### Known limitations
+- Same as 1.1.1, 1.1.0 and 1.0.2 (below), except that scanned PDFs can now be read as described above.
+- Not tested: scanned books of several hundred pages, PCs with little memory or few processor cores, and languages other than English.
+- Pages that are rotated by 90° or 270° in the PDF file may have recognised text that is not lined up with the picture (not specifically tested).
+
 ## Ebook Reader 1.1.1 · 2026-10-06
 
 **Installer:** `installers/Ebook-Reader-Setup-1.1.1.exe` (108.6 MB, Windows 10/11, 64-bit)
