@@ -2,6 +2,11 @@
 
 Newest first. Each entry gives the date, the decision, why, and the alternatives considered.
 
+## 2026-10-06 · F16 OCR: engine pool and whole-book run (Stage 03, S14)
+- **Up to 3 engines (cores − 1), all stopped 20 s after the last job.** Measured on the user's 128-page scanned book: 5 min 29 s, peak about 1.05 GB, about 0.5 GB afterwards. One engine would be about 3 times slower; more than 3 would use more memory for little gain on typical PCs.
+- **Cancel lets pages already being read finish (and saves them)** instead of aborting an engine mid-page, which tesseract.js cannot do cleanly. **Continue** is just "read the pages that are still pictures", so it also resumes after quitting the app; no separate resume state is stored.
+- **Reading order starts at the page on screen**, so the pages the user is about to read come first.
+
 ## 2026-10-06 · F16 OCR: drop low-confidence lines (Stage 03, S13)
 - **Lines the engine scores below 40 (of 100), or that contain no letter or digit, are not kept.** A blank scanned page produced 80 junk lines at confidence 6–19, while real text scores 94–96 on a clean scan. Without the filter a blank page could never read as "No text found" and junk would pollute search. Cost: on very poor scans a few correct but doubtful lines are lost. The threshold (`MIN_LINE_CONFIDENCE`) is one constant, to be reviewed against the user's real scanned book in Stage 04.
 - **Default Tesseract settings kept.** On a hand-lettered real page the single-column mode found 79 % of the words against 71 %, but it would hurt ordinary multi-column books; tuning to one book was rejected.

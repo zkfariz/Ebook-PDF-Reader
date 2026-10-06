@@ -7,10 +7,12 @@ interface SearchPanelProps {
   search: ReturnType<typeof useSearch>
   /** Changes whenever Ctrl+F / 🔍 asks for the search box to get the keyboard. */
   focusToken: number
+  /** Scanned PDFs (F16.5): lets the "no text" message offer to read the whole book. */
+  recogniseBook?: { running: boolean; start: () => void }
 }
 
 /** F09: search box + result list with the match in bold and where it is. */
-export function SearchPanel({ search, focusToken }: SearchPanelProps) {
+export function SearchPanel({ search, focusToken, recogniseBook }: SearchPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLOListElement>(null)
   const [text, setText] = useState(search.ranQuery)
@@ -67,6 +69,14 @@ export function SearchPanel({ search, focusToken }: SearchPanelProps) {
           : 'This book has no searchable text (it may be scanned).')}
         {!tooShort && status === 'done' && results.length === 0 && !noText && `No results for '${ranQuery}'`}
       </p>
+
+      {!tooShort && status === 'done' && results.length === 0 && noText && search.canRecognise && recogniseBook && (
+        <p>
+          <button className="primary" onClick={recogniseBook.start} disabled={recogniseBook.running}>
+            {recogniseBook.running ? 'Recognising the book…' : 'Recognise the whole book'}
+          </button>
+        </p>
+      )}
 
       {results.length > 0 && (
         <ol className="search-results" aria-label="Search results" ref={listRef}>

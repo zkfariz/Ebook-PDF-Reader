@@ -23,6 +23,7 @@ No account, no internet connection, no tracking. Your books never leave your com
 - **Day and night mode**, and **full screen**
 - **Table of contents** you can click, and **word search** across the whole book
 - **Bookmarks**, **highlights** in four colours, and **notes** attached to highlights
+- **Scanned PDFs:** recognise the text of a page (or the whole book) so it can be selected, searched, highlighted and noted. It runs on your computer, only when you ask, and never changes your PDF
 
 ## Install
 
@@ -36,7 +37,7 @@ Ebook Reader only *offers* itself for `.pdf` and `.epub` files. It never takes o
 
 ## Limitations
 
-- Scanned PDFs (pages that are only pictures) can't be searched or highlighted.
+- Recognised text from scanned PDFs may contain mistakes, especially on hand-lettered, faded or skewed pages. Only English is supported for now, and reading a whole book takes minutes.
 - Copy-protected (DRM) books can't be opened.
 - Links to websites inside books do nothing, because the app works offline only.
 - Chinese, Japanese and Korean books have not been tested.

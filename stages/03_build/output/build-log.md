@@ -2,6 +2,28 @@
 
 One entry per slice, newest first.
 
+## 2026-10-06 · S14 · F16 OCR: whole-book recognition, hardening → installer v1.2.0 🔍
+
+**What changed**
+- `ocr/OcrQueue.ts`: runs the pages a few at a time, in reading order (from the page on screen to the end, then the earlier ones); Cancel stops starting new pages (pages already being read finish and are saved); a failed page is counted and the rest carry on. `workerCount` = cores − 1, at most 3.
+- `ocr/OcrPool.ts`: up to 3 OCR engines, started as needed and **all stopped 20 s after the last job** (each holds about 150 MB), or when the book is closed. `PdfAdapter` uses it; `PageOcr` gained `picturePages()` and `recognisedCount()`.
+- `useOcr`: `recogniseBook` / `cancelBook` and a run state; every page is saved the moment it is read, so an interrupted run keeps its finished pages (F16.7). **Continue** reads only pages that are still pictures (pages already read or found blank are not read again).
+- UI: the notice shows "Recognising the book: N of M pages. You can keep reading." + Cancel; afterwards "Finished. N pages read." / "Stopped. N of M pages were read." + Continue / "N pages could not be read." + Try again. On a picture page it offers **Recognise text** and **Recognise the whole book** (or **Continue recognising the book** once some pages are done). The search panel's "no searchable text" message now has the **Recognise the whole book** button (F16.5 complete).
+- Version → **1.2.0**; README features and limitations updated.
+
+**How it was checked**
+| Check | Method | Result |
+|---|---|---|
+| typecheck; 73 unit tests (+7 for the queue: order, concurrency limit, cancel, a failing page, empty list, reading order, worker count) | automated | ✔ |
+| 4 new e2e tests: whole book with progress, turning pages while it runs, then search finds words on both pages and the blank page says so (F16.3, F16.4); the search-panel button (F16.5); Cancel stops it (the saved count stays put, less than all) and Continue reads only the rest (F16.3); quitting in the middle keeps the finished pages and the run can be continued (F16.7). The long book is a temporary 8-page copy built by the test (`scanHelper.ts`) | automated | ✔ 100/100 |
+| **Real scanned book** (the user's Forrest Mims, 128 pages, private test) whole-book run in the dev build, 8 cores, 3 engines | scripted | **5 min 29 s** (about 2.6 s per page overall; F16.11's "about 10 s per page" holds); all 128 pages saved, 1,852 lines, a **355 KB** file; **peak memory about 1.05 GB** for the whole app, **about 0.5 GB 25 s after finishing** (engines released) |
+| Packaged `win-unpacked` app: open `scanned.pdf`, recognise the whole book, search | scripted | ✔ 18.7 s for 3 pages, "Boscombe" found on p. 2, 0 blocked requests, 0 errors |
+| Installer | built | `Ebook-Reader-Setup-1.2.0.exe` 118.0 MB (1.1.1 was 113.9 MB: **+4 MB**); installed size about 387 MB |
+
+**Honest notes**
+- Peak memory of about **1 GB** while a whole book is being read is more than I expected (3 engines plus page images). It drops once the run ends. On a PC with little memory, 2 engines would be gentler; the count is one constant (`workerCount`).
+- Not tested: a book of several hundred scanned pages, a PC with fewer cores or less memory, other languages (English only), and accuracy on typeset scans of real books (only synthetic pages and the user's hand-lettered book so far). The hand test of 1.2.0 by the user is next (Stage 04).
+
 ## 2026-10-06 · S13 · F16 OCR: recognise a page (notice, text layer, search, highlights) ✔
 
 **What changed**

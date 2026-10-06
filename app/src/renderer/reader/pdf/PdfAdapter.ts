@@ -17,7 +17,7 @@ import {
   type ViewSettings
 } from '../ReaderAdapter'
 import type { Anchor, OcrLine } from '@shared/schemas'
-import type { OcrEngine } from '../ocr/OcrEngine'
+import { OcrPool } from '../ocr/OcrPool'
 import { toStoredLine } from '../ocr/ocrGeometry'
 import { renderPageForOcr } from '../ocr/pageImage'
 import { PdfTextStore } from './PdfTextStore'
@@ -58,7 +58,7 @@ export class PdfAdapter implements ReaderAdapter {
   private toc?: PdfToc
   private textStore?: PdfTextStore
   private layers = new PageLayers()
-  private ocr_?: OcrEngine
+  private ocrPool = new OcrPool()
 
   on = this.events.on.bind(this.events)
 
@@ -117,13 +117,22 @@ export class PdfAdapter implements ReaderAdapter {
     this.pageEl.remove()
     this.events.clear()
     void this.loadingTask?.destroy() // also terminates the worker
-    void this.ocr_?.dispose()
+    void this.ocrPool.dispose()
   }
 
   /** Text recognition for scanned pages (F16). */
   readonly ocr: PageOcr = {
     load: (saved) => this.textStore?.setOcr(saved),
     pageState: (n) => (this.textStore ? this.textStore.pageState(n) : Promise.resolve('text')),
+    picturePages: async () => {
+      const pages: number[] = []
+      for (let n = 1; n <= (this.doc?.numPages ?? 0); n++) {
+        if (this.destroyed) break
+        if ((await this.textStore?.pageState(n)) === 'picture') pages.push(n)
+      }
+      return pages
+    },
+    recognisedCount: () => this.textStore?.recognisedCount() ?? 0,
     recognise: async (n) => {
       const lines = await this.readPage(n)
       this.textStore?.addOcrPage(n, lines)
@@ -139,11 +148,10 @@ export class PdfAdapter implements ReaderAdapter {
   private async readPage(n: number): Promise<OcrLine[]> {
     const doc = this.doc
     if (!doc) throw new Error('No book is open')
-    const { OcrEngine } = await import('../ocr/OcrEngine')
-    this.ocr_ ??= new OcrEngine()
     const page = await doc.getPage(n)
     const { blob, viewport } = await renderPageForOcr(page)
-    const lines = await this.ocr_.recognise(blob)
+    // The engines are started as needed and stopped a while after the last page (OcrPool).
+    const lines = await this.ocrPool.run((engine) => engine.recognise(blob))
     const view = page.view as [number, number, number, number]
     page.cleanup()
     return lines.flatMap((l) => toStoredLine(l, viewport, view) ?? [])

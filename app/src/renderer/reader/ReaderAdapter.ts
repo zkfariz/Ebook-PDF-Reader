@@ -86,6 +86,10 @@ export interface PageOcr {
   /** Loads recognised pages saved earlier. Call after open() and before mount(). */
   load(saved: Record<string, { lines: OcrLine[] }>): void
   pageState(page: number): Promise<PageTextState>
+  /** Pages that are still only pictures (not read yet, not found blank), in book order. */
+  picturePages(): Promise<number[]>
+  /** How many pages have recognised text. */
+  recognisedCount(): number
   /** Reads a picture-only page. The text is usable at once (search, selection, highlights); the caller saves the lines. */
   recognise(page: number): Promise<OcrLine[]>
 }

@@ -58,6 +58,13 @@ export class PdfTextStore {
     this.cache.delete(pageNumber)
   }
 
+  /** Pages that have recognised text (not counting pages found blank). */
+  recognisedCount(): number {
+    let n = 0
+    for (const lines of this.ocrPages.values()) if (lines.length > 0) n++
+    return n
+  }
+
   /** Has this page text of its own, was it recognised, or is it only a picture? (F16.1) */
   async pageState(pageNumber: number): Promise<PageTextState> {
     const { text, source } = await this.get(pageNumber)

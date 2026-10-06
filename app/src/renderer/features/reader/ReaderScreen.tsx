@@ -270,7 +270,14 @@ export function ReaderScreen({
                   />
                 )
               },
-              { id: 'search', label: 'Search', content: <SearchPanel search={search} focusToken={searchFocus} /> }
+              { id: 'search', label: 'Search', content: (
+                  <SearchPanel
+                    search={search}
+                    focusToken={searchFocus}
+                    recogniseBook={{ running: ocr.book.phase === 'running', start: ocr.recogniseBook }}
+                  />
+                )
+              }
             ]}
           />
         )}
