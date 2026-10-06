@@ -2,6 +2,13 @@
 
 Newest first. Each entry gives the date, the decision, why, and the alternatives considered.
 
+## 2026-10-06 · F16 OCR for scanned PDFs: stack and data model (Stage 02, v1.2.0)
+- **Tesseract.js 7 (Apache-2.0) in a web worker, English `best_int` data, `tesseract-core-lstm`.** Spike on synthetic pages (clean; and rough: tilted 1.5°, noise, blur, JPEG): 100 % / 99.6 % of words correct, about 4.6 s for a dense 511-word page, word boxes available. The 11 MB `eng` data gave identical accuracy, so the 3 MB one is used. Alternatives: Windows built-in OCR (needs a native bridge, depends on the user's language packs), PaddleOCR (heavy), OCRmyPDF (needs Python and writes a new PDF, which our rule forbids). The spike used clean synthetic fonts: **real scanned books will be worse** and are measured in Stage 04.
+- **New data file `books/<bookId>.ocr.json`** (data-model.md §2), separate from the per-book file, written page by page. **Line level** boxes in PDF points (about 1 MB per 240 pages; word level would be about 10 times larger).
+- **Integration point is `PdfTextStore.get(page)`**: a text-less page gets a pdf.js-shaped text content built from the stored lines, so search, selection and highlights work unchanged.
+- **Offline:** tesseract.js's `workerPath`, `corePath` and `langPath` are all set to `app://bundle/ocr/`. Files are copied from `node_modules` at `postinstall` (git-ignored, like pdf.js).
+- Scope per spec: only on request, English only, PDF only, text stored in app data, the PDF is never changed.
+
 ## 2026-10-06 · Release v1.1.1 (Stage 05)
 - **Patch release for B004** (night-mode text in EPUBs with their own colours). Released exactly as tested (1.1.1, SHA-256 `fc68f212…a90694c`), no further bump.
 - **Night mode overrides every text colour inside an EPUB** (links keep the accent colour). Alternative: only fix the body colour. Rejected because books also colour paragraphs and headings (the test book does), and dark-on-dark text is the worse failure than losing a book's coloured headings at night. Day mode keeps the book's own colours.

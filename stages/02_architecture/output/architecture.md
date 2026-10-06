@@ -1,4 +1,4 @@
-# Architecture · v1
+# Architecture · v1 (+ F16 OCR, section 8)
 
 Status: **draft, awaiting approval** · 2026-10-04 · Inputs: `01_spec/output/spec.md` (approved), `_config/tech-stack.md`, `skills/*`
 
@@ -79,6 +79,8 @@ All calls are `invoke` (request → promise) unless marked *event*.
 | `library.locate(bookId)` | id | `{ ok: true, path } \| { ok: false, reason: 'cancelled' \| 'different-file' }` | F01.5 |
 | `bookData.get(bookId)` | id | `BookData` (defaults if none) | F05/F06/F11/F12 |
 | `bookData.put(bookId, data)` | id, `BookData` | `void` (queued atomic write) | same |
+| `ocr.get(bookId)` | id | `OcrData` (`{ pages: {} }` if none) | F16 |
+| `ocr.putPage(bookId, page, lines)` | id, page number, `OcrLine[]` | `void` (queued atomic write into `books/<id>.ocr.json`) | F16 |
 | `settings.get()` / `settings.set(patch)` | — / partial | `Settings` | F08, window |
 | `app.systemTheme()` | — | `'day' \| 'night'` | F08 first launch |
 | `win.setFullScreen(on)` | bool | `void` | F13 |
@@ -176,3 +178,45 @@ AppState { screen: 'library' | 'reader'; theme; settings; library: LibraryEntry[
 | DRM EPUB | `META-INF/encryption.xml` with non-font entries → `UnsupportedBook('drm')` | "This book is copy-protected (DRM) and can't be opened." |
 | Password PDF | pdf.js `PasswordException` | password prompt / "Incorrect password" |
 | Scanned PDF | `hasText=false` (no text items in the first 5 pages, then checked lazily) | search & selection messages (F09.4, F11.5) |
+
+## 8 · OCR for scanned PDFs (F16, added 2026-10-06 for v1.2.0)
+
+**Decision (decisions-log 2026-10-06):** Tesseract.js 7 (Apache-2.0) in a web worker; English data `eng` **best_int** (about 3 MB); engine core `tesseract-core-lstm` (about 3 MB). Spike result: 99.6–100 % of words right on a clean and on a deliberately rough synthetic page (tilted 1.5 degrees, noise, blur, JPEG); about 4.6 s for a dense 511-word page; word boxes available. The 11 MB `eng` data gave identical accuracy, so it is not used.
+
+### Modules (all renderer; main only stores)
+```
+src/renderer/reader/ocr/
+  OcrEngine.ts      creates the tesseract.js worker(s) from app://bundle/ocr/*; recognise(imageBlob) → lines
+  OcrService.ts     per book: queue of pages, 1–3 workers, progress, cancel, resume; writes each finished page via ocr.putPage
+  pageImage.ts      renders one PDF page with pdf.js to an offscreen canvas (long side about 2200 px) → Blob
+  ocrContent.ts     OcrLine[] → a pdf.js-shaped TextContent (one item per line) so the existing text layer, search and anchors work unchanged
+src/main/store/     OcrStore: books/<id>.ocr.json (read, putPage, delete); zod schema in shared/schemas.ts
+src/renderer/features/reader/OcrNotice.tsx   the notice above a text-less page + progress + Cancel
+```
+
+### How it plugs into the existing PDF code
+- `PdfTextStore.get(page)` is the single place that reads page text for **search (F09), selection and highlights (F11)**. For a page whose pdf.js text is empty, it asks `OcrService` for stored lines and builds the same `PdfPageContent` from them (`ocrContent.ts`). Nothing downstream changes.
+- `PageLayers` already draws the pdf.js text layer from a `TextContent`. With OCR content it draws the same invisible, selectable text over the page image, so selection, highlight rectangles and search outlines work as on a normal PDF.
+- `PdfTextStore.hasText()` stays about the PDF's own text. A new `isScanned` / `recognisedPages` state drives the notice (F16.1) and the new search message (F16.5).
+- Coordinates: OCR runs on a bitmap at scale S; line boxes are converted to PDF points with the page viewport (handles page rotation) before they are stored, so stored data does not depend on S or on zoom.
+
+### Security, CSP and offline
+- The page CSP already has `worker-src 'self' blob:`. WebAssembly may additionally need `script-src 'self' 'wasm-unsafe-eval'`; S12 verifies whether it is needed (pdf.js's own wasm already runs) and adds only that if so.
+- All three tesseract.js paths are given explicitly (`workerPath`, `corePath`, `langPath`, all `app://bundle/ocr/...`, `gzip: true`). Left at default it would download from a CDN, which the offline blocker would cancel. S12's test asserts that **no request is blocked and none leaves the app**.
+- `app://bundle` must serve `.wasm` as `application/wasm` (checked in S12).
+- Files are copied from `node_modules` into `src/renderer/public/ocr/` by the `postinstall` script, as for pdf.js (the copies are git-ignored).
+
+### Performance and memory
+- Only on request (Q8). One worker for "this page"; for "whole book" up to `min(3, cores - 1)` workers, started lazily and **terminated when the queue is empty** (each holds about 100–200 MB).
+- The reader stays responsive: workers are separate threads; page images are rendered one at a time on the main thread (short).
+- Rough time for a whole book: about 4–5 s per dense page per worker, so a 240-page book is roughly 6–18 min depending on workers and page density. The notice shows "Reading page N of M" and an estimate.
+
+### Errors (adds to section 7)
+| Condition | Message |
+|---|---|
+| Page has no readable text | "No text found on this page." (stored as an empty page, not retried) |
+| Engine or worker fails to start | "Text recognition isn't available right now." The reader keeps working |
+| One page fails | skipped, shown as failed in the progress note, can be retried |
+
+### Open risks (see build-plan.md)
+CSP / wasm in the packaged app · worker memory on a 500-page book · accuracy on real, poor scans (to be measured on a real scanned book in Stage 04).

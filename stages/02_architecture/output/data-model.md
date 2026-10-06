@@ -86,6 +86,30 @@ Every file has a `schemaVersion`. Main validates it with zod when loading. If a 
 - `view` stores only the active format's key.
 - Lists are **sorted by book order** for display (comparing locations, §3); storage order does not matter.
 
+### books/&lt;bookId&gt;.ocr.json (F16, added 2026-10-06 for v1.2.0)
+Recognised text of a **scanned PDF**, kept in its own file so the main per-book file stays small and an OCR write never touches bookmarks or highlights. The file only exists once a page has been recognised.
+```json
+{
+  "schemaVersion": 1,
+  "engine": "tesseract.js 7 · eng best_int",
+  "pages": {
+    "12": {
+      "lines": [
+        { "t": "My experience of camp life in Afghanistan had at least", "b": [44.1, 40.2, 389.5, 52.0] }
+      ]
+    },
+    "13": { "lines": [] }
+  }
+}
+```
+- `pages` is keyed by 1-based page number. A page with `"lines": []` was recognised but has no readable text ("No text found on this page", F16.8); it is not read again.
+- `b` = `[x0, y0, x1, y1]` of the line in **PDF points, measured from the top-left of the unrotated page** (so it does not depend on the scale OCR ran at, or on zoom).
+- **Line level, not word level.** The browser selects and highlights inside a line, so word boxes are not needed. A 500-word page is about 4 KB; a 240-page book is about 1 MB. (Word level would be about 10 times larger.)
+- Written **one page at a time** through the same atomic, merged write queue as the other files, so closing the app mid-way keeps the finished pages (F16.7).
+- Deleted together with `books/<id>.json` when the book is removed from the library (F16.9).
+- Highlights and notes on recognised text use the existing PDF anchor (`page` + text offsets + stored `text` for repair). The recognised text is never re-created differently, because it is read from this file and not recomputed.
+- The PDF file itself is never written to.
+
 ## 3 · Location & anchor formats
 
 | | PDF | EPUB |

@@ -17,7 +17,11 @@ Each slice ends with a **runnable app** and a review gate (Stage 03 step 7). Sta
 | S8 Search | F09 | ✔ |
 | S9 Highlights | F11 | ✔ |
 | S10 Notes | F12 | ✔ |
-| S11 Installer | F14 | 🔨 built; install test with the user pending |
+| S11 Installer | F14 | ✔ |
+| (F15 "Open with" was built after v1.0 without a slice: see build-log 2026-10-06) | F15 | ✔ |
+| S12 OCR engine, storage, plumbing (v1.2.0) | F16 (engine, F16.9, F16.10) | ⬜ |
+| S13 Recognise a page: notice, text layer, search, highlights | F16.1, .2, .4, .5, .6, .8 | ⬜ |
+| S14 Whole-book recognition, hardening, installer 1.2.0 | F16.3, .7, .11 | ⬜ |
 
 ---
 
@@ -78,11 +82,28 @@ Each slice ends with a **runnable app** and a review gate (Stage 03 step 7). Sta
 
 ---
 
+## v1.2.0 · F16 OCR (added 2026-10-06; Stage 02 for F16)
+
+### S12 · OCR engine, storage and plumbing (spike first)
+**Touches:** `package.json` (`tesseract.js`, `@tesseract.js-data/eng`), `postinstall` copy into `public/ocr/`, `reader/ocr/OcrEngine.ts`, `pageImage.ts`, `main/store/OcrStore`, `shared/ipc.ts` + `schemas.ts` (`ocr.get` / `ocr.putPage`), CSP, protocol MIME for `.wasm`.
+**Fixture:** `tests/fixtures/scanned.pdf`, an image-only 3-page PDF made from public-domain text (generated once with a script that renders text to JPEG pages, then committed; small).
+**Done when:** a test recognises page 1 of `scanned.pdf` in the real app and the stored lines contain a known phrase; **zero blocked or outgoing network requests**; works in the packaged app (`win-unpacked`); the stored file round-trips; removing a book deletes its `.ocr.json`. (Covers F16.9, F16.10 and the engine half of F16.2.)
+
+### S13 · Recognise a page: notice, text layer, search, highlights
+**Touches:** `OcrService` (single page), `ocrContent.ts`, `PdfTextStore` (OCR fallback), `OcrNotice.tsx`, search message (F16.5), "No text found" (F16.8).
+**Done when:** F16.1, F16.2, F16.4, F16.5, F16.6, F16.8 pass in e2e on `scanned.pdf`: notice shows only on text-less pages; recognise → select and highlight → note; search finds it and outlines it; zoom, resize and restart keep the highlight on the same words; blank page message.
+
+### S14 · Recognise the whole book, hardening, installer 1.2.0
+**Touches:** `OcrService` queue (workers, progress, cancel, resume after restart), notice progress UI, version 1.2.0, installer size check.
+**Done when:** F16.3, F16.7, F16.11 pass (progress, keep reading meanwhile, Cancel, resume after a kill, time per page measured and recorded); a 500-page scanned book does not run out of memory (workers terminate when idle); installer is about 10–20 MB larger than 1.1.1. Hand over to Stage 04 with a **real scanned book** (the user's) for accuracy and speed.
+
+---
+
 ## Feature → slice coverage (audit)
 
-| F01 | F02 | F03 | F04 | F05 | F06 | F07 | F08 | F09 | F10 | F11 | F12 | F13 | F14 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| S1 S3 S4 | S2 S3 | S2 S3 S4 | S4 | S4 | S7 | S2 S3 | S5 | S8 | S6 | S9 | S10 | S5 | S11 |
+| F01 | F02 | F03 | F04 | F05 | F06 | F07 | F08 | F09 | F10 | F11 | F12 | F13 | F14 | F15 | F16 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| S1 S3 S4 | S2 S3 | S2 S3 S4 | S4 | S4 | S7 | S2 S3 | S5 | S8 | S6 | S9 | S10 | S5 | S11 | (no slice) | S12 S13 S14 |
 
 ## Risks
 
@@ -91,4 +112,8 @@ Each slice ends with a **runnable app** and a review gate (Stage 03 step 7). Sta
 | foliate-js behaves differently in a sandboxed, CSP-locked renderer | S3 spike with a clear fallback to epub.js |
 | TypeScript 7 (new native compiler) incompatible with a tool | Type-check only; pin `typescript@6` if needed and log it |
 | pdf.js worker not found in the packaged app | Packaging smoke test moved forward to S4 |
+| F16: Tesseract.js worker or WebAssembly blocked by the CSP, or `.wasm` served with the wrong type, in the packaged app | S12 tests the packaged `win-unpacked` build first; add only `'wasm-unsafe-eval'` if needed |
+| F16: tesseract.js tries to download its engine/data from a CDN | all three paths set explicitly; S12 asserts zero blocked and zero outgoing requests |
+| F16: memory on a 500-page scanned book (each worker 100–200 MB) | at most 3 workers, terminated when idle; S14 test on a large scanned fixture |
+| F16: accuracy on poor real scans is lower than the synthetic spike (99.6 %) | spec already promises only "may contain mistakes"; Stage 04 measures on the user's real scanned book |
 | Huge PDFs over IPC (100 MB+) | Accept for v1; a `book://` streaming protocol is a later optimisation |
