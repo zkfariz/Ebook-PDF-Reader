@@ -11,6 +11,8 @@ import { useSearch } from '../search/useSearch'
 import { anchorLoc, useHighlights } from '../highlights/useHighlights'
 import { HighlightList } from '../highlights/HighlightList'
 import { HighlightPopup, type PopupState } from '../highlights/HighlightPopup'
+import { OcrNotice } from '../ocr/OcrNotice'
+import { useOcr } from '../ocr/useOcr'
 import { useFullscreen } from './useFullscreen'
 import { matchShortcut, type ShortcutAction } from '../../app/keymap'
 import { Dialog } from '../../ui/Dialog'
@@ -66,6 +68,7 @@ export function ReaderScreen({
   const marks = useBookmarks(book.format, adapterRef, sessionRef, progress, toc)
   const search = useSearch(adapterRef)
   const hl = useHighlights(adapterRef, sessionRef)
+  const ocr = useOcr(adapterRef, book.bookId, progress)
   const [popup, setPopup] = useState<PopupState | null>(null)
   const [searchFocus, setSearchFocus] = useState(0)
 
@@ -82,6 +85,8 @@ export function ReaderScreen({
       session.recordOpened(meta, stripExtension(book.fileName))
       marks.load()
       hl.load()
+      // Pages recognised earlier (F16): their text is used from the first page on.
+      if (adapter.ocr) adapter.ocr.load((await window.api.ocr.get(book.bookId)).pages)
       const saved = session.savedView
       if (saved) await adapter.setView(saved)
       adapter.setTheme(themeRef.current)
@@ -272,6 +277,7 @@ export function ReaderScreen({
         <main className="reader-pane" ref={paneRef} tabIndex={-1}>
           {phase.kind === 'opening' && <p className="reader-status">Opening…</p>}
         </main>
+        {phase.kind === 'ready' && <OcrNotice ocr={ocr} />}
       </div>
 
       {/* Always rendered for EPUB so the pane never changes size after the book is laid out. */}

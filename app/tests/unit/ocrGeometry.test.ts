@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toStoredLine, type ViewportLike } from '../../src/renderer/reader/ocr/ocrGeometry'
+import { MIN_LINE_CONFIDENCE, toStoredLine, type ViewportLike } from '../../src/renderer/reader/ocr/ocrGeometry'
 
 // A PDF page's user space has y pointing up. pdf.js's viewport maps bitmap pixels to it.
 /** An unrotated page of 612 x 792 points, view [0, 0, 612, 792], rendered at `scale`. */
@@ -26,6 +26,18 @@ describe('toStoredLine', () => {
     const box = { x0: 0, y0: 0, x1: 10, y1: 10 }
     expect(toStoredLine({ text: '  a \n  b\t c ', bbox: box }, upright(1), [0, 0, 612, 792])?.t).toBe('a b c')
     expect(toStoredLine({ text: ' \n ', bbox: box }, upright(1), [0, 0, 612, 792])).toBeNull()
+  })
+
+  it('drops lines the engine is unsure of (paper grain) and lines with no letter or digit', () => {
+    const box = { x0: 0, y0: 0, x1: 10, y1: 10 }
+    const vp = upright(1)
+    const view = [0, 0, 612, 792] as const
+    expect(toStoredLine({ text: 'Bema es Da ae ee', confidence: 16, bbox: box }, vp, view)).toBeNull()
+    expect(toStoredLine({ text: 'Real words', confidence: 94, bbox: box }, vp, view)?.t).toBe('Real words')
+    expect(toStoredLine({ text: 'Fair scan', confidence: MIN_LINE_CONFIDENCE, bbox: box }, vp, view)?.t).toBe('Fair scan')
+    expect(toStoredLine({ text: '— . , ~ |', confidence: 95, bbox: box }, vp, view)).toBeNull()
+    expect(toStoredLine({ text: '1984', confidence: 90, bbox: box }, vp, view)?.t).toBe('1984')
+    expect(toStoredLine({ text: 'Épée', confidence: 90, bbox: box }, vp, view)?.t).toBe('Épée') // letters beyond A–Z count
   })
 
   it('keeps boxes the right way round on a rotated page', () => {

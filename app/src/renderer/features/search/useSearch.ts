@@ -85,5 +85,7 @@ export function useSearch(adapterRef: RefObject<ReaderAdapter | null>) {
     [results.length, active, select]
   )
 
-  return { ranQuery, results, status, capped, noText, active, run, clear, select, step }
+  // Scanned PDFs can be recognised (F16): then "no text" says how to get some.
+  const canRecognise = Boolean(adapterRef.current?.ocr)
+  return { ranQuery, results, status, capped, noText, canRecognise, active, run, clear, select, step }
 }

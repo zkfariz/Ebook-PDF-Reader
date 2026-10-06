@@ -111,3 +111,37 @@
   color: var(--accent);
   border-color: var(--accent);
 }
+
+/* F16: notice over the bottom edge of a scanned page; floats, so the page never changes size. */
+.reader-body {
+  position: relative;
+}
+.ocr-notice {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--page-shadow);
+}
+.ocr-notice[data-state='recognised'],
+.ocr-notice[data-state='blank'] {
+  color: var(--muted);
+  padding: 3px 10px;
+  font-size: 0.8rem;
+}
+.ocr-error {
+  color: var(--danger);
+}

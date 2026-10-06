@@ -2,6 +2,10 @@
 
 Newest first. Each entry gives the date, the decision, why, and the alternatives considered.
 
+## 2026-10-06 · F16 OCR: drop low-confidence lines (Stage 03, S13)
+- **Lines the engine scores below 40 (of 100), or that contain no letter or digit, are not kept.** A blank scanned page produced 80 junk lines at confidence 6–19, while real text scores 94–96 on a clean scan. Without the filter a blank page could never read as "No text found" and junk would pollute search. Cost: on very poor scans a few correct but doubtful lines are lost. The threshold (`MIN_LINE_CONFIDENCE`) is one constant, to be reviewed against the user's real scanned book in Stage 04.
+- **Default Tesseract settings kept.** On a hand-lettered real page the single-column mode found 79 % of the words against 71 %, but it would hurt ordinary multi-column books; tuning to one book was rejected.
+
 ## 2026-10-06 · F16 OCR for scanned PDFs: stack and data model (Stage 02, v1.2.0)
 - **Tesseract.js 7 (Apache-2.0) in a web worker, English `best_int` data, `tesseract-core-lstm`.** Spike on synthetic pages (clean; and rough: tilted 1.5°, noise, blur, JPEG): 100 % / 99.6 % of words correct, about 4.6 s for a dense 511-word page, word boxes available. The 11 MB `eng` data gave identical accuracy, so the 3 MB one is used. Alternatives: Windows built-in OCR (needs a native bridge, depends on the user's language packs), PaddleOCR (heavy), OCRmyPDF (needs Python and writes a new PDF, which our rule forbids). The spike used clean synthetic fonts: **real scanned books will be worse** and are measured in Stage 04.
 - **New data file `books/<bookId>.ocr.json`** (data-model.md §2), separate from the per-book file, written page by page. **Line level** boxes in PDF points (about 1 MB per 240 pages; word level would be about 10 times larger).

@@ -2,7 +2,7 @@
 // It grew slice by slice: S1 open/mount/relocate · S2 navigation & zoom · S3 EPUB · S6 TOC ·
 // S7 bookmarks · S8 search · S9 selection and highlights.
 import type { BookFormat, Theme } from '@shared/ipc'
-import type { Anchor, Highlight } from '@shared/schemas'
+import type { Anchor, Highlight, OcrLine } from '@shared/schemas'
 
 export type Loc = string
 
@@ -78,6 +78,18 @@ export class ReaderError extends Error {
   }
 }
 
+/** What a PDF page offers as text (F16): its own, text recognised from the picture, a picture still to read, or nothing found. */
+export type PageTextState = 'text' | 'recognised' | 'picture' | 'blank'
+
+/** Reading text from scanned PDF pages (F16). Only the PDF adapter has it. */
+export interface PageOcr {
+  /** Loads recognised pages saved earlier. Call after open() and before mount(). */
+  load(saved: Record<string, { lines: OcrLine[] }>): void
+  pageState(page: number): Promise<PageTextState>
+  /** Reads a picture-only page. The text is usable at once (search, selection, highlights); the caller saves the lines. */
+  recognise(page: number): Promise<OcrLine[]>
+}
+
 export interface ReaderEvents {
   relocate: Progress
   view: ViewState
@@ -95,6 +107,8 @@ export interface ReaderEvents {
 
 export interface ReaderAdapter {
   readonly format: BookFormat
+  /** Present for PDF only: text recognition for scanned pages (F16). */
+  readonly ocr?: PageOcr
   /** Throws ReaderError. The data is copied, never modified. */
   open(data: Uint8Array, opts?: { password?: string }): Promise<BookMeta>
   /**

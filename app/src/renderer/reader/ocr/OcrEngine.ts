@@ -31,7 +31,7 @@ export class OcrEngine {
     const { data } = await worker.recognize(image, {}, { blocks: true })
     return (data.blocks ?? []).flatMap((block) =>
       block.paragraphs.flatMap((paragraph) =>
-        paragraph.lines.map((line) => ({ text: line.text, bbox: line.bbox }))
+        paragraph.lines.map((line) => ({ text: line.text, bbox: line.bbox, confidence: line.confidence }))
       )
     )
   }

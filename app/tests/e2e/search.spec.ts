@@ -101,7 +101,7 @@ test('F09.4 a PDF without any text explains that it cannot be searched', async (
   await openPdf('no-text.pdf', '1 / 3')
   await page.keyboard.press('Control+F')
   await searchFor('anything')
-  await expect(statusLine()).toHaveText('This book has no searchable text (it may be scanned).')
+  await expect(statusLine()).toHaveText('This book has no searchable text. Recognise it to search.')
 })
 
 test('F09.5 500-page PDF: first results within 2 s, no freezing, capped at 500, clearing cancels', async () => {

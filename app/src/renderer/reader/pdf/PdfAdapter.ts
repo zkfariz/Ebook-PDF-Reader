@@ -8,6 +8,7 @@ import {
   type BookMeta,
   type Loc,
   type PdfZoom,
+  type PageOcr,
   type ReaderAdapter,
   type ReaderEvents,
   type RenderHighlight,
@@ -57,7 +58,7 @@ export class PdfAdapter implements ReaderAdapter {
   private toc?: PdfToc
   private textStore?: PdfTextStore
   private layers = new PageLayers()
-  private ocr?: OcrEngine
+  private ocr_?: OcrEngine
 
   on = this.events.on.bind(this.events)
 
@@ -116,24 +117,46 @@ export class PdfAdapter implements ReaderAdapter {
     this.pageEl.remove()
     this.events.clear()
     void this.loadingTask?.destroy() // also terminates the worker
-    void this.ocr?.dispose()
+    void this.ocr_?.dispose()
+  }
+
+  /** Text recognition for scanned pages (F16). */
+  readonly ocr: PageOcr = {
+    load: (saved) => this.textStore?.setOcr(saved),
+    pageState: (n) => (this.textStore ? this.textStore.pageState(n) : Promise.resolve('text')),
+    recognise: async (n) => {
+      const lines = await this.readPage(n)
+      this.textStore?.addOcrPage(n, lines)
+      if (n === this.pageNumber) await this.refreshTextLayer()
+      return lines
+    }
   }
 
   /**
-   * Reads the text of one page that is only a picture (F16). The OCR engine is loaded on first use,
+   * Reads the text of one page that is only a picture. The OCR engine is loaded on first use,
    * so books that never need it do not pay for it. Lines are in the stored form (PDF points).
    */
-  async recognisePage(n: number): Promise<OcrLine[]> {
+  private async readPage(n: number): Promise<OcrLine[]> {
     const doc = this.doc
     if (!doc) throw new Error('No book is open')
     const { OcrEngine } = await import('../ocr/OcrEngine')
-    this.ocr ??= new OcrEngine()
+    this.ocr_ ??= new OcrEngine()
     const page = await doc.getPage(n)
     const { blob, viewport } = await renderPageForOcr(page)
-    const lines = await this.ocr.recognise(blob)
+    const lines = await this.ocr_.recognise(blob)
     const view = page.view as [number, number, number, number]
     page.cleanup()
     return lines.flatMap((l) => toStoredLine(l, viewport, view) ?? [])
+  }
+
+  /** Rebuilds the text layer of the page on screen (its text just changed) without redrawing the picture. */
+  private async refreshTextLayer(): Promise<void> {
+    const { doc, textStore } = this
+    const canvas = this.layers.sheet.querySelector('canvas')
+    if (!doc || !textStore || !canvas || this.destroyed) return
+    const n = this.pageNumber
+    const ready = await this.layers.show(canvas, await doc.getPage(n), n, this.currentScale, textStore.get(n))
+    if (ready) this.marks.redraw()
   }
 
   // ---------- navigation (F02) ----------

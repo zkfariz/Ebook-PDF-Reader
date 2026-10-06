@@ -2,7 +2,27 @@
 
 One entry per slice, newest first.
 
-## 2026-10-06 · S12 · F16 OCR: engine, storage and plumbing ✔ (v1.2.0 in progress)
+## 2026-10-06 · S13 · F16 OCR: recognise a page (notice, text layer, search, highlights) ✔
+
+**What changed**
+- `ocr/ocrContent.ts`: recognised lines → a pdf.js-shaped text content (one item per line). `PdfTextStore` uses it for a page that has no text of its own (`source: 'ocr'`), so the existing text layer, selection, search and highlight code work unchanged; `pageState(n)` = text / recognised / picture / blank; `setOcr` / `addOcrPage`.
+- `PdfAdapter.ocr` (`PageOcr`: `load`, `pageState`, `recognise`) and `refreshTextLayer()` (rebuilds the text layer of the page on screen without redrawing the picture). EPUB has no `ocr`.
+- UI: `features/ocr/useOcr.ts` + `OcrNotice.tsx`, a slim notice floating over the bottom edge of the page (so the page never changes size): "This page is a picture…" + **Recognise text**; "Reading this page…"; "Recognised text may contain mistakes."; "No text found on this page."; an error line if the engine fails. Each page is saved with `ocr.putPage` as soon as it is read; saved pages are loaded before the first page is shown.
+- Search: a PDF with no text now says "This book has no searchable text. Recognise it to search." (F16.5; the F09.4 test text was updated). **The "Recognise the whole book" button of F16.5 comes with S14.**
+- **Noise filter:** lines with engine confidence below 40, or without any letter or digit, are dropped. Found by the new blank-page test: the paper grain of a blank scan came out as 80 junk lines (confidence 6–19), while real lines score 94–96. Now a blank scan reads "No text found".
+- Fixture `tests/fixtures/scanned.pdf` (3 image-only pages, 573 KB, public-domain text; page 3 blank) with its generator `make-scanned.mjs`.
+
+**How it was checked**
+| Check | Method | Result |
+|---|---|---|
+| typecheck; 66 unit tests (+1: confidence and letter filter) | automated | ✔ |
+| 5 new e2e tests: F16.1 notice on a picture page, none on a text PDF; F16.2 recognise → selectable text → highlight → listed, PDF byte-identical (F16.9); F16.5 + F16.4 search message, then a hit on a recognised page that outlines on click; F16.6 highlight survives zoom and an app restart, no second reading; F16.8 blank page message, kept after restart | automated | ✔ 96/96 |
+| Real scanned book (the user's Forrest Mims, 128 pages, private test only; nothing from it is committed): page 20, hand-lettered notebook page with ruled lines and diagrams | scripted + screenshot | the highlight sits on the right line (text layer is aligned); 7.6 s for the page; recognised text is **rough**: about 71 % (40 of 56) of the words I could read on the page were found with the default setting |
+
+**Settings tried on that real page (not adopted):** single-column mode found 44 of 56 (79 %), sparse mode 45 but about 2× slower and with no line order, the 11 MB data file the same as the 3 MB one. These gains are small and specific to one book, so the general default stays. Ideas that could help hand-lettered or ruled pages (removing ruled lines, contrast clean-up) are noted for later, not built.
+
+**Not done yet (S14):** recognise the whole book (progress, Cancel, resume), the F16.5 button, F16.11 timing across a whole book, and the 1.2.0 installer.
+: engine, storage and plumbing ✔ (v1.2.0 in progress)
 
 **What changed**
 - Dependencies (dev): `tesseract.js` 7 (Apache-2.0), `@tesseract.js-data/eng` (MIT). `scripts/copy-ocr-assets.mjs` (run by `postinstall`) copies the worker, the engine `tesseract-core-simd-lstm.wasm.js` (WebAssembly embedded) and `eng.traineddata.gz` (best_int) into `public/ocr/` (6.7 MB, git-ignored like pdf.js). In the browser build the engine is one self-contained file, so no `.wasm` MIME handling was needed.

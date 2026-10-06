@@ -6,8 +6,16 @@ export interface ViewportLike {
 }
 
 /** A line as the engine reports it: pixels of the bitmap that was recognised, origin top-left. */
+/**
+ * Lines the engine is less sure of than this (0 to 100) are dropped. Real lines of text score about 90 or
+ * more on a clean scan; the grain of a blank scanned page scores below 25 (measured on scanned.pdf, S13).
+ */
+export const MIN_LINE_CONFIDENCE = 40
+
 export interface PixelLine {
   text: string
+  /** How sure the engine is, 0 to 100. */
+  confidence?: number
   bbox: { x0: number; y0: number; x1: number; y1: number }
 }
 
@@ -23,7 +31,9 @@ export function toStoredLine(
   view: readonly [number, number, number, number]
 ): OcrLine | null {
   const text = line.text.replace(/\s+/g, ' ').trim()
-  if (!text) return null
+  // Dirt and paper grain come out as short junk with a low score; a line needs a letter or a digit.
+  if (!text || !/[\p{L}\p{N}]/u.test(text)) return null
+  if ((line.confidence ?? 100) < MIN_LINE_CONFIDENCE) return null
   const [ax, ay] = viewport.convertToPdfPoint(line.bbox.x0, line.bbox.y0) as [number, number]
   const [bx, by] = viewport.convertToPdfPoint(line.bbox.x1, line.bbox.y1) as [number, number]
   const round = (n: number) => Math.round(n * 100) / 100

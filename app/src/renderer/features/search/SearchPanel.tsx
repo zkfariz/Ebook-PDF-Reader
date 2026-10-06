@@ -62,7 +62,9 @@ export function SearchPanel({ search, focusToken }: SearchPanelProps) {
           </>
         )}
         {!tooShort && status === 'done' && results.length === 0 && noText &&
-          'This book has no searchable text (it may be scanned).'}
+          (search.canRecognise
+          ? 'This book has no searchable text. Recognise it to search.'
+          : 'This book has no searchable text (it may be scanned).')}
         {!tooShort && status === 'done' && results.length === 0 && !noText && `No results for '${ranQuery}'`}
       </p>
 
