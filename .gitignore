@@ -8,3 +8,4 @@ shared/test-books/*
 !shared/test-books/.gitkeep
 *.log
 app/src/renderer/public/pdfjs/
+app/src/renderer/public/ocr/

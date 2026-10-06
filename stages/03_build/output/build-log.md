@@ -2,7 +2,27 @@
 
 One entry per slice, newest first.
 
-## 2026-10-06 · Fix B004: night-mode text unreadable in books with their own colours → installer v1.1.1 🔍
+## 2026-10-06 · S12 · F16 OCR: engine, storage and plumbing ✔ (v1.2.0 in progress)
+
+**What changed**
+- Dependencies (dev): `tesseract.js` 7 (Apache-2.0), `@tesseract.js-data/eng` (MIT). `scripts/copy-ocr-assets.mjs` (run by `postinstall`) copies the worker, the engine `tesseract-core-simd-lstm.wasm.js` (WebAssembly embedded) and `eng.traineddata.gz` (best_int) into `public/ocr/` (6.7 MB, git-ignored like pdf.js). In the browser build the engine is one self-contained file, so no `.wasm` MIME handling was needed.
+- `reader/ocr/OcrEngine.ts` (worker wrapper; all three paths set to `app://bundle/ocr/…`, `workerBlobURL: false`, no cache), `pageImage.ts` (renders a page to a bitmap, long side 2200 px), `ocrGeometry.ts` (pixel boxes → PDF points from the top-left, independent of scale and rotation). `PdfAdapter.recognisePage(n)` loads the engine lazily (its own 40 kB chunk, so normal reading never loads it) and is not yet used by the UI.
+- Storage: `OcrFileSchema`/`OcrLineSchema`, `Store.getOcr/putOcrPage` (`books/<id>.ocr.json`, atomic and merged writes), removed with the book and moved on rekey; IPC `ocr.get` / `ocr.putPage` with zod validation (bad ids, page 0, empty text and malformed boxes are rejected).
+- **No change to the CSP was needed** (the worker runs fine with the existing `worker-src 'self' blob:`).
+
+**How it was checked**
+| Check | Method | Result |
+|---|---|---|
+| typecheck | automated | ✔ |
+| 12 new unit tests (storage: persist, burst, replace, delete with the book, rekey, bad ids; schema; geometry incl. rotation and scale) | automated | ✔ 65/65 |
+| 3 new e2e tests: the engine reads a picture of text inside the real window (`app://`, CSP, offline blocker on) with **zero blocked requests** (with a positive control proving the blocker log is captured); pages saved over IPC survive a restart; malformed data and bad ids are refused | automated | ✔ 91/91 |
+| Engine on the two synthetic test pages (clean; rough: tilted, noisy, blurred, JPEG) in the dev build **and** in the packaged `win-unpacked` app | scripted | ✔ 511/511 and 509/511 words; about 4.3–5 s per dense page; 0 blocked, 0 page errors |
+| Installed size | measured | 380 → 386 MB (+6 MB) |
+
+**Found on the way:** my first "no blocked requests" check could not fail, because the page's own CSP stops a page request before the blocker sees it, and the main-process console was not being captured. The control request (sent from the main process) caught that; the test now proves the blocker's log is visible before asserting it is empty.
+
+**Not done yet (S13/S14):** the notice, the text layer from recognised lines, search and highlights, whole-book recognition, a scanned PDF fixture, the real scanned book (user's Forrest Mims, 128 pages, no text layer, private test only, never committed).
+ night-mode text unreadable in books with their own colours → installer v1.1.1 🔍
 
 - **B004** (found by the user with a Project Gutenberg EPUB): the book's `body { color: black }` beat the night text colour. `epub/epubStyles.ts` now sets colour and a transparent background on `body` with `!important`, and in night mode replaces all text colours in the book (links keep the accent colour). Day mode keeps the book's own colours on headings and similar.
 - New fixture `styled.epub` (Gutenberg-style CSS; the generator still reproduces the old fixtures byte for byte) and an e2e test that reads real screen pixels (night: something bright; day: something dark). Confirmed to **fail without the fix**.

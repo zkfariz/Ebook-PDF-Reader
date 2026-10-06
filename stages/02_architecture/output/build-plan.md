@@ -19,7 +19,7 @@ Each slice ends with a **runnable app** and a review gate (Stage 03 step 7). Sta
 | S10 Notes | F12 | ✔ |
 | S11 Installer | F14 | ✔ |
 | (F15 "Open with" was built after v1.0 without a slice: see build-log 2026-10-06) | F15 | ✔ |
-| S12 OCR engine, storage, plumbing (v1.2.0) | F16 (engine, F16.9, F16.10) | ⬜ |
+| S12 OCR engine, storage, plumbing (v1.2.0) | F16 (engine, F16.9, F16.10) | ✔ |
 | S13 Recognise a page: notice, text layer, search, highlights | F16.1, .2, .4, .5, .6, .8 | ⬜ |
 | S14 Whole-book recognition, hardening, installer 1.2.0 | F16.3, .7, .11 | ⬜ |
 

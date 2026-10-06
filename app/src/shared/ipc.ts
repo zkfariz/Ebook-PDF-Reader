@@ -1,6 +1,6 @@
 // IPC channel names and the typed API exposed on window.api.
 // Every channel used by main or preload must be listed here (architecture.md §4).
-import type { BookData, LibraryEntry, Settings, SettingsPatch } from './schemas'
+import type { BookData, LibraryEntry, OcrFile, OcrLine, Settings, SettingsPatch } from './schemas'
 
 export const IPC = {
   appSystemTheme: 'app:systemTheme',
@@ -15,6 +15,8 @@ export const IPC = {
   libraryRekey: 'library:rekey',
   bookDataGet: 'bookData:get',
   bookDataPut: 'bookData:put',
+  ocrGet: 'ocr:get',
+  ocrPutPage: 'ocr:putPage',
   settingsGet: 'settings:get',
   settingsSet: 'settings:set',
   winSetFullScreen: 'win:setFullScreen',
@@ -69,6 +71,12 @@ export interface Api {
   bookData: {
     get(bookId: string): Promise<BookData>
     put(bookId: string, data: BookData): Promise<void>
+  }
+  ocr: {
+    /** Recognised text of a scanned PDF (F16); `{ pages: {} }` if nothing was recognised yet. */
+    get(bookId: string): Promise<OcrFile>
+    /** Saves one recognised page (empty `lines` = nothing readable on it). */
+    putPage(bookId: string, page: number, lines: OcrLine[]): Promise<void>
   }
   settings: {
     get(): Promise<Settings>

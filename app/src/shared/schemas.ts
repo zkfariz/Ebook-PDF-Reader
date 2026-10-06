@@ -67,6 +67,19 @@ export const BookDataSchema = z.object({
   highlights: z.array(HighlightSchema).max(10000)
 })
 
+/** One recognised line of a scanned page (F16). `b` = [x0, y0, x1, y1] in PDF points from the top-left of the unrotated page. */
+export const OcrLineSchema = z.object({
+  t: z.string().min(1).max(2000),
+  b: z.tuple([z.number(), z.number(), z.number(), z.number()])
+})
+
+export const OcrFileSchema = z.object({
+  schemaVersion: z.literal(1),
+  engine: z.string().max(200),
+  /** Keyed by 1-based page number. An empty `lines` array = recognised, nothing readable on it. */
+  pages: z.record(z.string().regex(/^[1-9][0-9]{0,5}$/), z.object({ lines: z.array(OcrLineSchema).max(5000) }))
+})
+
 export const SidebarTabSchema = z.enum(['contents', 'bookmarks', 'highlights', 'search'])
 
 export const WindowBoundsSchema = z.object({
@@ -92,6 +105,8 @@ export type LibraryEntry = z.infer<typeof LibraryEntrySchema>
 export type LibraryFile = z.infer<typeof LibraryFileSchema>
 export type Bookmark = z.infer<typeof BookmarkSchema>
 export type Highlight = z.infer<typeof HighlightSchema>
+export type OcrLine = z.infer<typeof OcrLineSchema>
+export type OcrFile = z.infer<typeof OcrFileSchema>
 export type BookData = z.infer<typeof BookDataSchema>
 export type BookView = z.infer<typeof BookViewSchema>
 export type Settings = z.infer<typeof SettingsSchema>
@@ -100,6 +115,8 @@ export type WindowBounds = z.infer<typeof WindowBoundsSchema>
 
 export const emptyBookData = (): BookData => ({ schemaVersion: 1, view: {}, bookmarks: [], highlights: [] })
 export const defaultSettings = (): Settings => ({ schemaVersion: 1, sidebar: { open: true, tab: 'contents' } })
+export const OCR_ENGINE = 'tesseract.js 7 · eng best_int'
+export const emptyOcr = (): OcrFile => ({ schemaVersion: 1, engine: OCR_ENGINE, pages: {} })
 export const emptyLibrary = (): LibraryFile => ({ schemaVersion: 1, books: {} })
 
 /** Library list order: most recently opened first (F04). */

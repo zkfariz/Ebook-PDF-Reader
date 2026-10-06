@@ -27,6 +27,10 @@ const api: Api = {
     get: (bookId) => ipcRenderer.invoke(IPC.bookDataGet, bookId),
     put: (bookId, data) => ipcRenderer.invoke(IPC.bookDataPut, bookId, data)
   },
+  ocr: {
+    get: (bookId) => ipcRenderer.invoke(IPC.ocrGet, bookId),
+    putPage: (bookId, page, lines) => ipcRenderer.invoke(IPC.ocrPutPage, bookId, page, lines)
+  },
   settings: {
     get: () => ipcRenderer.invoke(IPC.settingsGet),
     set: (patch) => ipcRenderer.invoke(IPC.settingsSet, patch)

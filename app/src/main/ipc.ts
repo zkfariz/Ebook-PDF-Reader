@@ -1,7 +1,7 @@
 import { BrowserWindow, clipboard, ipcMain, nativeTheme } from 'electron'
 import { z } from 'zod'
 import { BOOK_EXTENSIONS, IPC, type LocateResult, type Theme } from '@shared/ipc'
-import { BookDataSchema, BookIdSchema, LibraryEntrySchema, SettingsPatchSchema } from '@shared/schemas'
+import { BookDataSchema, BookIdSchema, LibraryEntrySchema, OcrLineSchema, SettingsPatchSchema } from '@shared/schemas'
 import { readBook, showOpenDialog } from './files'
 import type { Store } from './store/store'
 import type { OpenRequests } from './openRequests'
@@ -60,6 +60,16 @@ export function registerIpc(store: Store, openRequests: OpenRequests): void {
   ipcMain.handle(IPC.bookDataGet, (_e, bookId: unknown) => store.getBookData(BookIdSchema.parse(bookId)))
   ipcMain.handle(IPC.bookDataPut, (_e, bookId: unknown, data: unknown) =>
     store.putBookData(BookIdSchema.parse(bookId), BookDataSchema.parse(data))
+  )
+
+  // ---- recognised text of scanned PDFs (F16) ----
+  ipcMain.handle(IPC.ocrGet, (_e, bookId: unknown) => store.getOcr(BookIdSchema.parse(bookId)))
+  ipcMain.handle(IPC.ocrPutPage, (_e, bookId: unknown, page: unknown, lines: unknown) =>
+    store.putOcrPage(
+      BookIdSchema.parse(bookId),
+      z.number().int().min(1).max(999999).parse(page),
+      z.array(OcrLineSchema).max(5000).parse(lines)
+    )
   )
 
   // ---- clipboard ----

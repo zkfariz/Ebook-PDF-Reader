@@ -15,7 +15,10 @@ import {
   type TocItem,
   type ViewSettings
 } from '../ReaderAdapter'
-import type { Anchor } from '@shared/schemas'
+import type { Anchor, OcrLine } from '@shared/schemas'
+import type { OcrEngine } from '../ocr/OcrEngine'
+import { toStoredLine } from '../ocr/ocrGeometry'
+import { renderPageForOcr } from '../ocr/pageImage'
 import { PdfTextStore } from './PdfTextStore'
 import { PageLayers } from './PageLayers'
 import { PdfMarks } from './PdfMarks'
@@ -54,6 +57,7 @@ export class PdfAdapter implements ReaderAdapter {
   private toc?: PdfToc
   private textStore?: PdfTextStore
   private layers = new PageLayers()
+  private ocr?: OcrEngine
 
   on = this.events.on.bind(this.events)
 
@@ -112,6 +116,24 @@ export class PdfAdapter implements ReaderAdapter {
     this.pageEl.remove()
     this.events.clear()
     void this.loadingTask?.destroy() // also terminates the worker
+    void this.ocr?.dispose()
+  }
+
+  /**
+   * Reads the text of one page that is only a picture (F16). The OCR engine is loaded on first use,
+   * so books that never need it do not pay for it. Lines are in the stored form (PDF points).
+   */
+  async recognisePage(n: number): Promise<OcrLine[]> {
+    const doc = this.doc
+    if (!doc) throw new Error('No book is open')
+    const { OcrEngine } = await import('../ocr/OcrEngine')
+    this.ocr ??= new OcrEngine()
+    const page = await doc.getPage(n)
+    const { blob, viewport } = await renderPageForOcr(page)
+    const lines = await this.ocr.recognise(blob)
+    const view = page.view as [number, number, number, number]
+    page.cleanup()
+    return lines.flatMap((l) => toStoredLine(l, viewport, view) ?? [])
   }
 
   // ---------- navigation (F02) ----------

@@ -5,12 +5,16 @@ import {
   BookIdSchema,
   defaultSettings,
   emptyBookData,
+  emptyOcr,
   emptyLibrary,
   LibraryFileSchema,
+  OcrFileSchema,
   SettingsSchema,
   sortLibrary,
   type BookData,
   type LibraryEntry,
+  type OcrFile,
+  type OcrLine,
   type Settings
 } from '@shared/schemas'
 import type { LibraryListItem } from '@shared/ipc'
@@ -19,13 +23,14 @@ import { JsonFile } from './jsonFile'
 
 /**
  * All persistent app data under one folder (data-model.md):
- *   settings.json · library.json · books/<bookId>.json
+ *   settings.json · library.json · books/<bookId>.json · books/<bookId>.ocr.json (F16)
  * Book files themselves are never written.
  */
 export class Store {
   readonly settings: JsonFile<typeof SettingsSchema>
   private readonly library: JsonFile<typeof LibraryFileSchema>
   private readonly bookFiles = new Map<string, JsonFile<typeof BookDataSchema>>()
+  private readonly ocrFiles = new Map<string, JsonFile<typeof OcrFileSchema>>()
 
   constructor(private readonly dir: string) {
     this.settings = new JsonFile(join(dir, 'settings.json'), SettingsSchema, defaultSettings)
@@ -57,12 +62,16 @@ export class Store {
     await this.library.write(lib)
     await this.bookFile(bookId).remove()
     this.bookFiles.delete(bookId)
+    await this.ocrFile(bookId).remove() // recognised text goes with the book (F16.9)
+    this.ocrFiles.delete(bookId)
   }
 
   /** Moves an entry and its reading data to a new id (user chose a changed file for a missing book). */
   async rekey(oldId: string, entry: LibraryEntry): Promise<void> {
     const data = await this.getBookData(oldId)
     await this.putBookData(entry.bookId, data)
+    const ocr = await this.getOcr(oldId)
+    if (Object.keys(ocr.pages).length > 0) await this.ocrFile(entry.bookId).write(ocr)
     const lib = await this.library.read()
     delete lib.books[oldId]
     lib.books[entry.bookId] = entry
@@ -70,6 +79,8 @@ export class Store {
     if (oldId !== entry.bookId) {
       await this.bookFile(oldId).remove()
       this.bookFiles.delete(oldId)
+      await this.ocrFile(oldId).remove()
+      this.ocrFiles.delete(oldId)
     }
   }
 
@@ -83,6 +94,20 @@ export class Store {
     return this.bookFile(bookId).write(data)
   }
 
+  // ---------- recognised text of scanned PDFs (F16) ----------
+
+  getOcr(bookId: string): Promise<OcrFile> {
+    return this.ocrFile(bookId).read()
+  }
+
+  /** Adds (or replaces) one recognised page. Bursts of pages are merged into few disk writes. */
+  async putOcrPage(bookId: string, page: number, lines: OcrLine[]): Promise<void> {
+    const file = this.ocrFile(bookId)
+    const data = await file.read()
+    data.pages[String(page)] = { lines }
+    await file.write(data)
+  }
+
   // ---------- settings ----------
 
   async updateSettings(patch: Partial<Settings>): Promise<Settings> {
@@ -93,7 +118,19 @@ export class Store {
 
   /** Waits for every pending write (called before the app quits). */
   async flushAll(): Promise<void> {
-    await Promise.all([this.settings.flush(), this.library.flush(), ...[...this.bookFiles.values()].map((f) => f.flush())])
+    await Promise.all([this.settings.flush(), this.library.flush(), ...[...this.bookFiles.values()].map((f) => f.flush()),
+      ...[...this.ocrFiles.values()].map((f) => f.flush())
+    ])
+  }
+
+  private ocrFile(bookId: string): JsonFile<typeof OcrFileSchema> {
+    BookIdSchema.parse(bookId)
+    let file = this.ocrFiles.get(bookId)
+    if (!file) {
+      file = new JsonFile(join(this.dir, 'books', `${bookId}.ocr.json`), OcrFileSchema, emptyOcr)
+      this.ocrFiles.set(bookId, file)
+    }
+    return file
   }
 
   private bookFile(bookId: string): JsonFile<typeof BookDataSchema> {
